@@ -120,7 +120,7 @@ PostDown = ${WG_POST_DOWN}
 [Peer]
 PublicKey = ${client.publicKey}
 ${client.preSharedKey ? `PresharedKey = ${client.preSharedKey}\n` : ''
-}AllowedIPs = ${client.address}/32`;
+}AllowedIPs = ${client.allowedIPs ?? (client.address+'/32')}`;
     }
 
     debug('Config saving...');
@@ -152,7 +152,7 @@ ${client.preSharedKey ? `PresharedKey = ${client.preSharedKey}\n` : ''
       expiredAt: client.expiredAt !== null
         ? new Date(client.expiredAt)
         : null,
-      allowedIPs: client.allowedIPs,
+      allowedIPs: client.allowedIPs ?? (client.address+'/32'),
       oneTimeLink: client.oneTimeLink ?? null,
       oneTimeLinkExpiresAt: client.oneTimeLinkExpiresAt ?? null,
       downloadableConfig: 'privateKey' in client,
@@ -353,6 +353,15 @@ Endpoint = ${WG_HOST}:${WG_CONFIG_PORT}`;
     }
 
     client.address = address;
+    client.updatedAt = new Date();
+
+    await this.saveConfig();
+  }
+
+  async updateClientAllowedIPs({ clientId, allowedIPs }) {
+    const client = await this.getClient({ clientId });
+
+    client.allowedIPs = allowedIPs;
     client.updatedAt = new Date();
 
     await this.saveConfig();
